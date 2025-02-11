@@ -3,7 +3,9 @@ class Board:
         self.solution = 0
         self.solved_boards = 0
 
-    def generateBoard(self):
+    def generatePuzzle(self):
+
+    def generateFullBoard(self):
         pass
 
     def findValidNumbers(self, board, y, x):
@@ -79,32 +81,94 @@ class Board:
                 return True
             board[yn][xn] = 0
         return False
+                                 
+
+    def humanSolve(self, board):
+        tileFound = True
+        while(tileFound):
+            tileFound = False
+            for y in range(0,9): # for each row
+                print("NEW ROW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") # TODO remove
+                validNums = []
+                for x in range(0,9):
+                    if board[y][x] == 0:
+                        validNums.append(self.findValidNumbers(board, y, x))
+                    else:
+                        validNums.append([])
+                    
+                print(validNums) # TODO remove
+                
+                for x in range(0,9):
+                    if len(validNums[x]) == 1: # there is only 1 possible number that can go in the tile
+                        board[y][x] = validNums[x][0]
+                        tileFound = True
+                        print(f"Added: {validNums[x][0]} in row {y} column {x}") # TODO remove
+            
+                for num in range(1,10):
+                    if sum(n.count(num) for n in validNums) == 1: # if number is only possible in 1 tile in row
+                        for x in range(0,9): # find x position of tile
+                            if num in validNums[x]:
+                                board[y][x] = num
+                                tileFound = True
+                                print(f"Added: {num} in row {y} column {x}") # TODO remove
+                print(board) # TODO remove
+
+            print("FINISHED ROWS") # TODO remove
+
+
+            for x in range(0,9): # for each column
+                
+                validNums = []
+                for y in range(0,9):
+                    if board[y][x] == 0:
+                        validNums.append(self.findValidNumbers(board, y, x))
+                    else:
+                        validNums.append([])
+
+                for num in range(1,10):
+                    if sum(n.count(num) for n in validNums) == 1: # if number is only possible in 1 tile in column
+                        for y in range(0,9): # find y position of tile
+                            if num in validNums[y]:
+                                board[y][x] = num
+                                tileFound = True
+                                print(f"Added: {num} in row {y} column {x}") # TODO remove
+                print(board) # TODO remove
+            print("FINISHED COLUMNS") # TODO remove
+
+            
+            for y in range(0,3): # for each 3x3 square
+                for x in range(0,3):
+                    validNums = []
+                    for i in range(0,3): # for each tile in the 3x3 square
+                        for j in range(0,3):
+                            if board[(y*3)+i][(x*3)+j] == 0:
+                                validNums.append(self.findValidNumbers(board, (y*3)+i, (x*3)+j))
+                            else:
+                                validNums.append([])
+
+                    for num in range(1,10):
+                        if sum(n.count(num) for n in validNums) == 1: # if number is only possible in 1 tile in 3x3 square
+                            for n in range(0,9): # find positioni of tile in validNums
+                                if num in validNums[n]:
+                                    i = (n//3) # i and j are the positions of the tile within the 3x3 grid
+                                    j = (n%3) # this finds these from the 1d array validNums
+                                    board[(y*3)+i][(x*3)+j] = num
+                                    tileFound = True
+                                    print(f"Added: {num} in row {(y*3)+i} column {(x*3)+j}") # TODO remove
+                    print(board) # TODO remove
+
+        # if here while loop has exited due to no tile being found, either board is solved or unsolvable
+        if any(0 in row for row in board): # if 0 is still in board, it means there is no solution
+            return False
+        else:
+            self.solution = board
+            return True
+
 
     def getSolution(self):
         return self.solution
-                                    
 
-    def humanSolve(self, board):
-        numAdded = True
-        emptyExists = True
-        while(numAdded and emptyExists):
-            numAdded = False # if you go through the whole board without adding a number no solution exists
-            emptyExists = False # tracks if an empty tile is found
-            
-            for y in range(0,9):
-                for x in range(0,9):
-                    if board[y][x] == 0: # loops through all empty tiles
-                        emptyExists = True
-                        validNumbers = self.findValidNumbers(board, y, x)
-                        if len(validNumbers) == 1: # only 1 possible number in square so add it
-                            board[y][x] = validNumbers[0]
-                            print(board)
-                            tileFound = True
-                            
-            if not emptyExists: # if no empty tiles were found, board is solved
-                self.solution = board
-                
-        return False
+        #print(validNums)
             
 
 board = [[6,8,0,0,0,7,1,0,0],
@@ -133,6 +197,8 @@ temp = Board()
 
 #temp.solveSudoku(board,0,0)
 temp.humanSolve(board)
+human = temp.getSolution().copy()
+
 print(f"##################################\n SOLUTION:\n {temp.getSolution()}")
 
          
