@@ -1,12 +1,39 @@
+import random
+
 class Board:
     def __init__(self):
         self.solution = 0
         self.solved_boards = 0
+        self.full_board = 0
 
     def generatePuzzle(self):
+        board = [[0 for i in range(0,9)] for j in range(0,9)]
+        self.generateFullBoard(board, 0, 0)
+        print(f"#############\nFull board:\n{self.full_board}")
 
-    def generateFullBoard(self):
-        pass
+    def generateFullBoard(self, board, y, x):
+        nextTile = self.choseTile(board, y, x)
+
+        if nextTile == 0: # if no open spaces, board is fully generated
+            self.full_board = board
+            return True
+        else:
+            yn = nextTile[0]
+            xn = nextTile[1]
+
+        # open spaces found, continue solving
+        validNumbers = self.findValidNumbers(board, yn, xn)
+        if validNumbers == []: # open tile exists with no valid numbers, board is invalid
+            return False
+
+        validNumbers = sorted(validNumbers, key=lambda x: random.random())
+        
+        for number in validNumbers:
+            board[yn][xn] = number
+            if self.generateFullBoard(board, yn, xn):
+                return True
+            board[yn][xn] = 0
+        return False
 
     def findValidNumbers(self, board, y, x):
         numbers = [1,2,3,4,5,6,7,8,9]
@@ -196,9 +223,13 @@ temp = Board()
 #print(validNumbers)
 
 #temp.solveSudoku(board,0,0)
-temp.humanSolve(board)
-human = temp.getSolution().copy()
 
-print(f"##################################\n SOLUTION:\n {temp.getSolution()}")
+
+#temp.humanSolve(board)
+#human = temp.getSolution().copy()
+
+temp.generatePuzzle()
+
+#print(f"##################################\n SOLUTION:\n {temp.getSolution()}")
 
          
