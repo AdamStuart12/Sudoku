@@ -1,12 +1,98 @@
 import random
 import copy
+import pygame
 
 class App:
     def __init__(self):
         board_generator = Board()
         board = 0
+        pygame.init()
 
+        WINDOW_WIDTH = 1280
+        WINDOW_HEIGHT = 720
+        LIGHT_GRAY = (200, 200, 200)
+        BORDER_GRAY = (160, 160, 160)
+        WHITE = (255, 255, 255)
+
+        window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         
+        pygame.display.set_caption("Sudoku")
+
+        clock = pygame.time.Clock()
+        FPS = 30
+
+        board, images, image_rects, tile_colors = self.newPuzzle(0)
+        '''
+        image = pygame.image.load("1.png")
+        image_rect = image.get_rect()
+        image_rect.top = 100
+        image_rect.left = 100
+        tile_color = WHITE
+        '''
+        
+        running = True
+
+        while running:
+
+            clock.tick(FPS)
+          
+            for event in pygame.event.get():  
+                if event.type == pygame.QUIT:  
+                    running = False
+                    pygame.display.quit()
+                    pygame.quit()
+                    #print("got here")
+                    #sys.exit()
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    mouse_pos = pygame.mouse.get_pos()
+                    #if image_rect.collidepoint(mouse_pos):
+                    #    print("hit")
+
+
+            # DRAW EVERYTHING TO SCREEN
+            window.fill(LIGHT_GRAY)
+            ####
+            
+            #pygame.draw.rect(window, tile_color, tile)
+            
+            pygame.draw.rect(window, BORDER_GRAY, [90, 90, 520, 520], 0)
+            
+            for y in range(0,9):
+                for x in range(0,9):
+                    pygame.draw.rect(window, tile_colors[y][x], image_rects[y][x])
+                    window.blit(images[y][x], image_rects[y][x])
+            
+            ##pygame.draw.rect(window, WHITE, image_rect)
+            #window.blit(image, image_rect)
+            pygame.display.flip()
+
+
+    def newPuzzle(self, difficulty):
+        TILE_WIDTH = 50
+        if difficulty == 0:
+            board = [[0 for i in range(0,9)] for j in range(0,9)]
+        else:
+            board = board_generator.generatePuzzle(difficulty)
+        images = [[0 for i in range(0,9)] for j in range(0,9)]
+        image_rects = [[0 for i in range(0,9)] for j in range(0,9)]
+        tile_colors = [[0 for i in range(0,9)] for j in range(0,9)]
+        
+        for y in range(0,9):
+            for x in range(0,9):
+                if difficulty == 0:
+                    images[y][x] = pygame.image.load("0.png")
+                else:
+                    pass
+                    # TODO draw correct board
+                image_rects[y][x] = images[y][x].get_rect()
+                image_rects[y][x].top = (100 + (y*TILE_WIDTH) + (y*5) + ((y//3)*5))
+                image_rects[y][x].left = (100 + (x*TILE_WIDTH) + (x*5) + ((x//3)*5))
+                tile_colors[y][x] = (255, 255, 255)
+                
+        return board, images, image_rects, tile_colors
+
+            
 
 class Board:
     def __init__(self):
@@ -42,7 +128,7 @@ class Board:
                     removed_numbers += 1
         
                 
-        print(board)
+        return board
             
 
     def generateFullBoard(self, board, y, x):
@@ -248,8 +334,9 @@ board = [[0,0,0,4,0,9,8,0,2],
 #print(f"##################################\n SOLUTION:\n {temp.getSolution()}")
 
 if __name__ == "__main__":
-    #app = App()
+    app = App()
     #print("here")
-    temp = Board()
-    temp.generatePuzzle(10)
+    #temp = Board()
+    #board = temp.generatePuzzle(10)
+    #print(board)
      
