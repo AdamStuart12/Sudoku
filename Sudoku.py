@@ -1,12 +1,25 @@
 import random
 import copy
 import pygame
+import string
+import random
 
 class App:
     def __init__(self):
-        pygame.init()
 
-        # Constants
+        ID = ""
+        ID += random.choice(string.ascii_letters).lower()
+        ID += random.choice(string.ascii_letters).lower()
+        ID += str(random.randint(0,9))
+        ID += str(random.randint(0,9))
+        print(ID)
+        
+        
+        
+        pygame.init()
+        pygame.font.init()
+
+        # Variables / constants
         board_class = Board()
         WINDOW_WIDTH = 1280
         WINDOW_HEIGHT = 720
@@ -15,6 +28,8 @@ class App:
         self.LIGHT_BLUE = (173, 216, 230)
         self.WHITE = (255, 255, 255)
         self.RED = (250, 127, 108)
+        puzzle_font = pygame.font.SysFont('Calibri', 48)
+        ID_font = pygame.font.SysFont('Calibri', 36, bold=True)
 
         # Random Game Stuff
         window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -23,6 +38,7 @@ class App:
         clock = pygame.time.Clock()
         FPS = 30
         scene = "play"
+        current_puzzle = 3
 
         # Buttons and game board
         board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(1)
@@ -34,6 +50,31 @@ class App:
             num_button_rects[i] = num_button_images[i].get_rect()
             num_button_rects[i].top = (190 + ((i//3)*(100+10)))
             num_button_rects[i].left = (700 + ((i%3)*(100+10)))
+
+        quit_button_image = pygame.image.load("quit.png")
+        quit_button_rect = quit_button_image.get_rect()
+        quit_button_rect.top = 660
+        quit_button_rect.left = 1040
+
+        quit_prompt_image = pygame.image.load("quit_prompt.png")
+        quit_prompt_rect = quit_prompt_image.get_rect()
+        quit_prompt_rect.top = 210
+        quit_prompt_rect.left = 440
+
+        quit_confirm_image = pygame.image.load("quit_confirm.png")
+        quit_confirm_rect = quit_confirm_image.get_rect()
+        quit_confirm_rect.top = 400
+        quit_confirm_rect.left = 650
+
+        quit_continue_image = pygame.image.load("continue.png")
+        quit_continue_rect = quit_continue_image.get_rect()
+        quit_continue_rect.top = 400
+        quit_continue_rect.left = 470
+
+        finished_incomplete_image = pygame.image.load("finished_incomplete.png")
+        finished_incomplete_rect = finished_incomplete_image.get_rect()
+        finished_incomplete_rect.top = 0 
+        finished_incomplete_rect.left = 0
 
         # Gameloop
         running = True
@@ -87,6 +128,15 @@ class App:
                                 image_rects[sel_y][sel_x].top = top
                                 image_rects[sel_y][sel_x].left = left
 
+                        if quit_button_rect.collidepoint(mouse_pos):
+                            scene = "quit_prompt"
+
+                    if scene == "quit_prompt":
+                        if quit_continue_rect.collidepoint(mouse_pos):
+                            scene = "play"
+                        if quit_confirm_rect.collidepoint(mouse_pos):
+                            scene = "finished_incomplete"
+
             if scene == "start":
                 pass
 
@@ -110,20 +160,40 @@ class App:
                     pygame.draw.rect(window, self.WHITE, num_button_rects[i])
                     window.blit(num_button_images[i], num_button_rects[i])
 
+                # Draws misc buttons and text
+                window.blit(quit_button_image, quit_button_rect)
+                curr_puzzle_text = puzzle_font.render(f"Puzzle {current_puzzle} out of 3", False, (0, 0, 0))
+                window.blit(curr_puzzle_text, (90,40))
+                ID_text = ID_font.render(f"Your ID: {ID}", False, (0, 0, 0))
+                window.blit(ID_text, (1060,625))
+
                 if empty_tiles == 0:
-                    scene = win
+                    if current_puzzle != 3:
+                        scene = "win"
+                    else:
+                        scene = "finished_success"
 
             if scene == "win":
                 print("win")
 
-            if scene == "finished":
-                pass
+            if scene == "finished_success":
+                print("finished_success")
 
-            if scene == "quit":
-                pass
+            if scene == "finished_incomplete":
+                window.fill(LIGHT_GRAY)
+                line1 = puzzle_font.render("You have chosen to end your participation in the study", False, (0, 0, 0))
+                line2 = puzzle_font.render("Any information held about you will be deleted", False, (0, 0, 0))
+                line3 = puzzle_font.render("Thank you for your time", False, (0, 0, 0))
+                window.blit(line1, (115,260))
+                window.blit(line2, (200,310))
+                window.blit(line3, (400,360))
+                #window.blit(finished_incomplete_image, finished_incomplete_rect)
 
-            if scene == "pass":
-                pass
+            if scene == "quit_prompt":
+                window.blit(quit_prompt_image, quit_prompt_rect)
+                window.blit(quit_confirm_image, quit_confirm_rect)
+                window.blit(quit_continue_image, quit_continue_rect)
+
             
             ##pygame.draw.rect(window, WHITE, image_rect)
             #window.blit(image, image_rect)
