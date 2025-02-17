@@ -4,34 +4,39 @@ import pygame
 
 class App:
     def __init__(self):
-        board_generator = Board()
-        board = 0
         pygame.init()
 
+        # Constants
+        board_class = Board()
         WINDOW_WIDTH = 1280
         WINDOW_HEIGHT = 720
         LIGHT_GRAY = (200, 200, 200)
         BORDER_GRAY = (160, 160, 160)
-        WHITE = (255, 255, 255)
+        self.LIGHT_BLUE = (173, 216, 230)
+        self.WHITE = (255, 255, 255)
+        self.RED = (250, 127, 108)
 
+        # Random Game Stuff
         window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        
         pygame.display.set_caption("Sudoku")
 
         clock = pygame.time.Clock()
         FPS = 30
+        scene = "play"
 
-        board, images, image_rects, tile_colors = self.newPuzzle(0)
-        '''
-        image = pygame.image.load("1.png")
-        image_rect = image.get_rect()
-        image_rect.top = 100
-        image_rect.left = 100
-        tile_color = WHITE
-        '''
-        
+        # Buttons and game board
+        board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(1)
+
+        num_button_images = [[] for i in range(0,9)]
+        num_button_rects = [[] for i in range(0,9)]
+        for i in range(0,9):
+            num_button_images[i] = pygame.image.load(f"{i+1}_button.png")
+            num_button_rects[i] = num_button_images[i].get_rect()
+            num_button_rects[i].top = (190 + ((i//3)*(100+10)))
+            num_button_rects[i].left = (700 + ((i%3)*(100+10)))
+
+        # Gameloop
         running = True
-
         while running:
 
             clock.tick(FPS)
@@ -41,27 +46,84 @@ class App:
                     running = False
                     pygame.display.quit()
                     pygame.quit()
-                    #print("got here")
                     #sys.exit()
 
                 elif event.type == pygame.MOUSEBUTTONUP:
                     mouse_pos = pygame.mouse.get_pos()
-                    #if image_rect.collidepoint(mouse_pos):
-                    #    print("hit")
+                    if scene == "play":
+                        # Board Clicked
+                        for y in range(0,9):
+                            for x in range(0,9):
+                                if image_rects[y][x].collidepoint(mouse_pos):
+                                    if tile_colors[y][x] == self.WHITE:
+                                        tile_colors = self.resetColors(tile_colors)
+                                        tile_colors[y][x] = self.LIGHT_BLUE
+                                        sel_y = y
+                                        sel_x = x
 
+                        # Num Button Clicked
+                        for i in range(0,9):
+                            if num_button_rects[i].collidepoint(mouse_pos):
+                                top = image_rects[sel_y][sel_x].top
+                                left = image_rects[sel_y][sel_x].left
+                                
+                                if board[sel_y][sel_x] == i+1: # if same number clicked
+                                    images[sel_y][sel_x] = pygame.image.load(f"0.png")
+                                    board[sel_y][sel_x] = 0
+                                    tile_colors[sel_y][sel_x] = self.LIGHT_BLUE
+                                    empty_tiles += 1
+                                    
+                                else: # if different number clicked
+                                    images[sel_y][sel_x] = pygame.image.load(f"{i+1}.png")
+                                    valid_nums = board_class.findValidNumbers(board, sel_y, sel_x)
+                                    board[sel_y][sel_x] = i+1
+                                    if (i+1) not in valid_nums:
+                                        tile_colors[sel_y][sel_x] = self.RED
+                                    else:
+                                        tile_colors[sel_y][sel_x] = self.LIGHT_BLUE
+                                    empty_tiles -= 1
+                                        
+                                image_rects[sel_y][sel_x] = images[sel_y][sel_x].get_rect()
+                                image_rects[sel_y][sel_x].top = top
+                                image_rects[sel_y][sel_x].left = left
 
-            # DRAW EVERYTHING TO SCREEN
-            window.fill(LIGHT_GRAY)
-            ####
-            
-            #pygame.draw.rect(window, tile_color, tile)
-            
-            pygame.draw.rect(window, BORDER_GRAY, [90, 90, 520, 520], 0)
-            
-            for y in range(0,9):
-                for x in range(0,9):
-                    pygame.draw.rect(window, tile_colors[y][x], image_rects[y][x])
-                    window.blit(images[y][x], image_rects[y][x])
+            if scene == "start":
+                pass
+
+            if scene == "play":
+                # DRAW EVERYTHING TO SCREEN
+                window.fill(LIGHT_GRAY)
+                ####
+                
+                #pygame.draw.rect(window, tile_color, tile)
+
+                # Draws the board
+                pygame.draw.rect(window, BORDER_GRAY, [90, 90, 520, 520], 0)
+                for y in range(0,9):
+                    for x in range(0,9):
+                        pygame.draw.rect(window, tile_colors[y][x], image_rects[y][x])
+                        window.blit(images[y][x], image_rects[y][x])
+
+                # Draws the number buttons
+                pygame.draw.rect(window, BORDER_GRAY, [690, 180, 340, 340], 0)
+                for i in range(0,9):
+                    pygame.draw.rect(window, self.WHITE, num_button_rects[i])
+                    window.blit(num_button_images[i], num_button_rects[i])
+
+                if empty_tiles == 0:
+                    scene = win
+
+            if scene == "win":
+                print("win")
+
+            if scene == "finished":
+                pass
+
+            if scene == "quit":
+                pass
+
+            if scene == "pass":
+                pass
             
             ##pygame.draw.rect(window, WHITE, image_rect)
             #window.blit(image, image_rect)
@@ -69,30 +131,40 @@ class App:
 
 
     def newPuzzle(self, difficulty):
+        board_generator = Board()
+        self.WHITE = (255,255,255)
+        self.LIGHT_BLUE = (173, 216, 230)
         TILE_WIDTH = 50
+        sel_y = 0
+        sel_x = 0
         if difficulty == 0:
             board = [[0 for i in range(0,9)] for j in range(0,9)]
         else:
-            board = board_generator.generatePuzzle(difficulty)
+            board, empty_tiles = board_generator.generatePuzzle(difficulty)
         images = [[0 for i in range(0,9)] for j in range(0,9)]
         image_rects = [[0 for i in range(0,9)] for j in range(0,9)]
-        tile_colors = [[0 for i in range(0,9)] for j in range(0,9)]
+        tile_colors = [[self.WHITE for i in range(0,9)] for j in range(0,9)]
+        tile_colors[0][0] = self.LIGHT_BLUE
         
         for y in range(0,9):
             for x in range(0,9):
                 if difficulty == 0:
                     images[y][x] = pygame.image.load("0.png")
                 else:
-                    pass
-                    # TODO draw correct board
-                image_rects[y][x] = images[y][x].get_rect()
-                image_rects[y][x].top = (100 + (y*TILE_WIDTH) + (y*5) + ((y//3)*5))
-                image_rects[y][x].left = (100 + (x*TILE_WIDTH) + (x*5) + ((x//3)*5))
-                tile_colors[y][x] = (255, 255, 255)
+                    images[y][x] = pygame.image.load(f"{board[y][x]}.png")
+                    image_rects[y][x] = images[y][x].get_rect()
+                    image_rects[y][x].top = (100 + (y*TILE_WIDTH) + (y*5) + ((y//3)*5))
+                    image_rects[y][x].left = (100 + (x*TILE_WIDTH) + (x*5) + ((x//3)*5))
                 
-        return board, images, image_rects, tile_colors
+        return board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles
 
-            
+
+    def resetColors(self, tile_colors):
+        for y in range(0,9):
+            for x in range(0,9):
+                if tile_colors[y][x] == self.LIGHT_BLUE:
+                    tile_colors[y][x] = self.WHITE 
+        return tile_colors
 
 class Board:
     def __init__(self):
@@ -128,7 +200,7 @@ class Board:
                     removed_numbers += 1
         
                 
-        return board
+        return board, removed_numbers
             
 
     def generateFullBoard(self, board, y, x):
