@@ -3,6 +3,10 @@ import copy
 import pygame
 import string
 import random
+import time
+import mysql.connector
+
+
 
 class App:
     def __init__(self):
@@ -13,8 +17,6 @@ class App:
         ID += str(random.randint(0,9))
         ID += str(random.randint(0,9))
         print(ID)
-        
-        
         
         pygame.init()
         pygame.font.init()
@@ -30,6 +32,7 @@ class App:
         self.RED = (250, 127, 108)
         puzzle_font = pygame.font.SysFont('Calibri', 48)
         ID_font = pygame.font.SysFont('Calibri', 36, bold=True)
+        results = [0,0,0]
 
         # Random Game Stuff
         window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -37,8 +40,8 @@ class App:
 
         clock = pygame.time.Clock()
         FPS = 30
-        scene = "play"
-        current_puzzle = 3
+        scene = "start"
+        current_puzzle = 1
 
         # Buttons and game board
         board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(1)
@@ -70,11 +73,24 @@ class App:
         quit_continue_rect = quit_continue_image.get_rect()
         quit_continue_rect.top = 400
         quit_continue_rect.left = 470
-
+        '''
         finished_incomplete_image = pygame.image.load("finished_incomplete.png")
         finished_incomplete_rect = finished_incomplete_image.get_rect()
         finished_incomplete_rect.top = 0 
         finished_incomplete_rect.left = 0
+        '''
+        rating_button_images = [[] for i in range(0,10)]
+        rating_button_rects = [[] for i in range(0,10)]
+        for i in range(0,10):
+            rating_button_images[i] = pygame.image.load(f"{i+1}_button.png")
+            rating_button_rects[i] = rating_button_images[i].get_rect()
+            rating_button_rects[i].top = 400
+            rating_button_rects[i].left = (50 + (i*100) + (i*20))
+
+        start_button_image = pygame.image.load("start.png")
+        start_button_rect = start_button_image.get_rect()
+        start_button_rect.top = 500
+        start_button_rect.left = 560
 
         # Gameloop
         running = True
@@ -117,12 +133,14 @@ class App:
                                 else: # if different number clicked
                                     images[sel_y][sel_x] = pygame.image.load(f"{i+1}.png")
                                     valid_nums = board_class.findValidNumbers(board, sel_y, sel_x)
+                                    board_val = board[sel_y][sel_x]
                                     board[sel_y][sel_x] = i+1
                                     if (i+1) not in valid_nums:
                                         tile_colors[sel_y][sel_x] = self.RED
                                     else:
                                         tile_colors[sel_y][sel_x] = self.LIGHT_BLUE
-                                    empty_tiles -= 1
+                                    if board_val == 0:
+                                        empty_tiles -= 1
                                         
                                 image_rects[sel_y][sel_x] = images[sel_y][sel_x].get_rect()
                                 image_rects[sel_y][sel_x].top = top
@@ -137,8 +155,50 @@ class App:
                         if quit_confirm_rect.collidepoint(mouse_pos):
                             scene = "finished_incomplete"
 
+                    if scene == "win":
+                        for i in range(0,10):
+                            if rating_button_rects[i].collidepoint(mouse_pos):
+                                results[current_puzzle-1] = i
+                                print(results)
+                                
+                                
+                                if current_puzzle == 3:
+                                    mydb = mysql.connector.connect(
+                                      host="132.145.18.222",
+                                      user="acs2000",
+                                      password="wnd4VKSANY3",
+                                      database="acs2000"
+                                    )
+                                    SQL = f"INSERT INTO Study VALUES ('{ID}', {results[0]}, {results[1]}, {results[2]});"
+                                    db = mydb.cursor()
+                                    db.execute(SQL)
+                                    mydb.commit()
+                                    scene = "finished_success"
+                                else:
+                                    # TODO calculate new difficulty
+                                    board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(1)
+                                    scene = "play"
+                                    current_puzzle += 1
+
+                    if scene == "start":
+                        if start_button_rect.collidepoint(mouse_pos):
+                            print("start pressed")
+                            scene = "play"
+
+
             if scene == "start":
-                pass
+                window.fill(LIGHT_GRAY)
+                line1 = puzzle_font.render("Welcome!", False, (0, 0, 0))
+                line2 = puzzle_font.render(f"Your ID is {ID}, please make a note of this", False, (0, 0, 0))
+                line3 = puzzle_font.render("Your task is to solve 3 sudoku puzzles", False, (0, 0, 0))
+                line4 = puzzle_font.render("After each puzzle you will be asked to rate the difficulty", False, (0, 0, 0))
+                line5 = puzzle_font.render(f"Press the button below when you are ready to begin", False, (0, 0, 0))
+                window.blit(line1, (530,210))
+                window.blit(line2, (230,260))
+                window.blit(line3, (280,310))
+                window.blit(line4, (100,360))
+                window.blit(line5, (130,410))
+                window.blit(start_button_image, start_button_rect)
 
             if scene == "play":
                 # DRAW EVERYTHING TO SCREEN
@@ -168,16 +228,28 @@ class App:
                 window.blit(ID_text, (1060,625))
 
                 if empty_tiles == 0:
-                    if current_puzzle != 3:
-                        scene = "win"
-                    else:
-                        scene = "finished_success"
+                    time.sleep(3)
+                    scene = "win"
+                    
 
             if scene == "win":
-                print("win")
+                window.fill(LIGHT_GRAY)
+                for i in range(0,10):
+                    pygame.draw.rect(window, self.WHITE, rating_button_rects[i])
+                    window.blit(rating_button_images[i], rating_button_rects[i])
+                line1 = puzzle_font.render(f"You have completed puzzle {current_puzzle}", False, (0, 0, 0))
+                line2 = puzzle_font.render("On a scale from 1 to 10, how difficult did you find that puzzle?", False, (0, 0, 0))
+                window.blit(line1, (350,260))
+                window.blit(line2, (43,310))
 
             if scene == "finished_success":
-                print("finished_success")
+                window.fill(LIGHT_GRAY)
+                line1 = puzzle_font.render("You have completed the 3 required puzzles", False, (0, 0, 0))
+                line2 = puzzle_font.render(f"Your ID is {ID}, please make a note of this", False, (0, 0, 0))
+                line3 = puzzle_font.render("You can now close this app and move on to the questionnaire", False, (0, 0, 0))
+                window.blit(line1, (230,260))
+                window.blit(line2, (250,310))
+                window.blit(line3, (50,360))
 
             if scene == "finished_incomplete":
                 window.fill(LIGHT_GRAY)
