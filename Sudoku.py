@@ -33,6 +33,8 @@ class App:
         puzzle_font = pygame.font.SysFont('Calibri', 48)
         ID_font = pygame.font.SysFont('Calibri', 36, bold=True)
         results = [0,0,0]
+        times = [0,0,0]
+        difficulty = 1
 
         # Random Game Stuff
         window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -42,9 +44,11 @@ class App:
         FPS = 30
         scene = "start"
         current_puzzle = 1
+        self.start_time = 0
+        self.end_time = 0
 
         # Buttons and game board
-        board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(1)
+        board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(difficulty)
 
         num_button_images = [[] for i in range(0,9)]
         num_button_rects = [[] for i in range(0,9)]
@@ -59,26 +63,31 @@ class App:
         quit_button_rect.top = 660
         quit_button_rect.left = 1040
 
+        skip_button_image = pygame.image.load("skip.png")
+        skip_button_rect = skip_button_image.get_rect()
+        skip_button_rect.top = 620
+        skip_button_rect.left = 90
+
         quit_prompt_image = pygame.image.load("quit_prompt.png")
         quit_prompt_rect = quit_prompt_image.get_rect()
         quit_prompt_rect.top = 210
         quit_prompt_rect.left = 440
 
-        quit_confirm_image = pygame.image.load("quit_confirm.png")
-        quit_confirm_rect = quit_confirm_image.get_rect()
-        quit_confirm_rect.top = 400
-        quit_confirm_rect.left = 650
+        skip_prompt_image = pygame.image.load("skip_prompt.png")
+        skip_prompt_rect = skip_prompt_image.get_rect()
+        skip_prompt_rect.top = 210
+        skip_prompt_rect.left = 440
 
-        quit_continue_image = pygame.image.load("continue.png")
-        quit_continue_rect = quit_continue_image.get_rect()
-        quit_continue_rect.top = 400
-        quit_continue_rect.left = 470
-        '''
-        finished_incomplete_image = pygame.image.load("finished_incomplete.png")
-        finished_incomplete_rect = finished_incomplete_image.get_rect()
-        finished_incomplete_rect.top = 0 
-        finished_incomplete_rect.left = 0
-        '''
+        quit_yes_image = pygame.image.load("yes.png")
+        quit_yes_rect = quit_yes_image.get_rect()
+        quit_yes_rect.top = 400
+        quit_yes_rect.left = 470
+
+        quit_no_image = pygame.image.load("no.png")
+        quit_no_rect = quit_no_image.get_rect()
+        quit_no_rect.top = 400
+        quit_no_rect.left = 650
+
         rating_button_images = [[] for i in range(0,10)]
         rating_button_rects = [[] for i in range(0,10)]
         for i in range(0,10):
@@ -149,16 +158,48 @@ class App:
                         if quit_button_rect.collidepoint(mouse_pos):
                             scene = "quit_prompt"
 
+                        if skip_button_rect.collidepoint(mouse_pos):
+                            scene = "skip_prompt"
+
                     if scene == "quit_prompt":
-                        if quit_continue_rect.collidepoint(mouse_pos):
+                        if quit_no_rect.collidepoint(mouse_pos):
                             scene = "play"
-                        if quit_confirm_rect.collidepoint(mouse_pos):
+                        if quit_yes_rect.collidepoint(mouse_pos):
                             scene = "finished_incomplete"
+
+                    if scene == "skip_prompt":
+                        if quit_no_rect.collidepoint(mouse_pos):
+                            scene = "play"
+                        if quit_yes_rect.collidepoint(mouse_pos):
+                            results[current_puzzle-1] = 0
+                            times[current_puzzle-1] = 0
+                            if current_puzzle == 3:
+                                    mydb = mysql.connector.connect(
+                                      host="132.145.18.222",
+                                      user="acs2000",
+                                      password="wnd4VKSANY3",
+                                      database="acs2000"
+                                    )
+                                    SQL = f"INSERT INTO Study VALUES ('{ID}', {results[0]}, {results[1]}, {results[2]});"
+                                    SQL2 = f"INSERT INTO Times VALUES ('{ID}', {times[0]}, {times[1]}, {times[2]});"
+                                    db = mydb.cursor()
+                                    db.execute(SQL)
+                                    mydb.commit()
+                                    db.execute(SQL2)
+                                    mydb.commit()
+                                    scene = "finished_success"
+                            
+                            else:
+                                if difficulty != 1:
+                                    difficulty -= 1
+                                board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(difficulty)
+                                scene = "play"
+                                current_puzzle += 1
 
                     if scene == "win":
                         for i in range(0,10):
                             if rating_button_rects[i].collidepoint(mouse_pos):
-                                results[current_puzzle-1] = i
+                                results[current_puzzle-1] = i+1
                                 print(results)
                                 
                                 
@@ -170,13 +211,24 @@ class App:
                                       database="acs2000"
                                     )
                                     SQL = f"INSERT INTO Study VALUES ('{ID}', {results[0]}, {results[1]}, {results[2]});"
+                                    SQL2 = f"INSERT INTO Times VALUES ('{ID}', {times[0]}, {times[1]}, {times[2]});"
                                     db = mydb.cursor()
                                     db.execute(SQL)
                                     mydb.commit()
+                                    db.execute(SQL2)
+                                    mydb.commit()
                                     scene = "finished_success"
                                 else:
-                                    # TODO calculate new difficulty
-                                    board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(1)
+                                    chosen = i+1
+                                    if chosen <= (difficulty+3):
+                                        difficulty += 3
+                                        if difficulty > 10:
+                                            difficulty -= difficulty % 10
+                                    elif chosen >= difficulty+4:
+                                        if difficulty != 1:
+                                            difficulty -= 1
+                                    print(f"difficulty: {difficulty}")
+                                    board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles = self.newPuzzle(difficulty)
                                     scene = "play"
                                     current_puzzle += 1
 
@@ -222,14 +274,19 @@ class App:
 
                 # Draws misc buttons and text
                 window.blit(quit_button_image, quit_button_rect)
+                window.blit(skip_button_image, skip_button_rect)
                 curr_puzzle_text = puzzle_font.render(f"Puzzle {current_puzzle} out of 3", False, (0, 0, 0))
                 window.blit(curr_puzzle_text, (90,40))
                 ID_text = ID_font.render(f"Your ID: {ID}", False, (0, 0, 0))
                 window.blit(ID_text, (1060,625))
 
                 if empty_tiles == 0:
-                    time.sleep(3)
+                    time.sleep(0.5)
                     scene = "win"
+                    self.end_time = time.time()
+                    times[current_puzzle-1] = self.end_time - self.start_time
+                    print(times)
+                    
                     
 
             if scene == "win":
@@ -238,9 +295,11 @@ class App:
                     pygame.draw.rect(window, self.WHITE, rating_button_rects[i])
                     window.blit(rating_button_images[i], rating_button_rects[i])
                 line1 = puzzle_font.render(f"You have completed puzzle {current_puzzle}", False, (0, 0, 0))
-                line2 = puzzle_font.render("On a scale from 1 to 10, how difficult did you find that puzzle?", False, (0, 0, 0))
-                window.blit(line1, (350,260))
-                window.blit(line2, (43,310))
+                line2 = puzzle_font.render("Where 1 is extremely easy and 10 is extremely difficult,", False, (0, 0, 0))
+                line3 = puzzle_font.render("how difficult did you find that puzzle?", False, (0, 0, 0))
+                window.blit(line1, (350,210))
+                window.blit(line2, (105,260))
+                window.blit(line3, (280,310))
 
             if scene == "finished_success":
                 window.fill(LIGHT_GRAY)
@@ -263,8 +322,15 @@ class App:
 
             if scene == "quit_prompt":
                 window.blit(quit_prompt_image, quit_prompt_rect)
-                window.blit(quit_confirm_image, quit_confirm_rect)
-                window.blit(quit_continue_image, quit_continue_rect)
+                window.blit(quit_yes_image, quit_yes_rect)
+                window.blit(quit_no_image, quit_no_rect)
+
+            if scene == "skip_prompt":
+                window.blit(skip_prompt_image, skip_prompt_rect)
+                window.blit(quit_yes_image, quit_yes_rect)
+                window.blit(quit_no_image, quit_no_rect)
+                
+                
 
             
             ##pygame.draw.rect(window, WHITE, image_rect)
@@ -279,6 +345,7 @@ class App:
         TILE_WIDTH = 50
         sel_y = 0
         sel_x = 0
+        self.start_time = time.time()
         if difficulty == 0:
             board = [[0 for i in range(0,9)] for j in range(0,9)]
         else:
