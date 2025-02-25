@@ -5,8 +5,16 @@ import string
 import random
 import time
 import mysql.connector
+import os
+import sys
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
 
+    return os.path.join(base_path, relative_path)
 
 class App:
     def __init__(self):
@@ -34,7 +42,7 @@ class App:
         ID_font = pygame.font.SysFont('Calibri', 36, bold=True)
         results = [0,0,0]
         times = [0,0,0]
-        difficulty = 1
+        difficulty = 3
 
         # Random Game Stuff
         window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -53,37 +61,37 @@ class App:
         num_button_images = [[] for i in range(0,9)]
         num_button_rects = [[] for i in range(0,9)]
         for i in range(0,9):
-            num_button_images[i] = pygame.image.load(f"{i+1}_button.png")
+            num_button_images[i] = pygame.image.load(resource_path(f"{i+1}_button.png"))
             num_button_rects[i] = num_button_images[i].get_rect()
             num_button_rects[i].top = (190 + ((i//3)*(100+10)))
             num_button_rects[i].left = (700 + ((i%3)*(100+10)))
 
-        quit_button_image = pygame.image.load("quit.png")
+        quit_button_image = pygame.image.load(resource_path("quit.png"))
         quit_button_rect = quit_button_image.get_rect()
         quit_button_rect.top = 660
         quit_button_rect.left = 1040
 
-        skip_button_image = pygame.image.load("skip.png")
+        skip_button_image = pygame.image.load(resource_path("skip.png"))
         skip_button_rect = skip_button_image.get_rect()
         skip_button_rect.top = 620
         skip_button_rect.left = 90
 
-        quit_prompt_image = pygame.image.load("quit_prompt.png")
+        quit_prompt_image = pygame.image.load(resource_path("quit_prompt.png"))
         quit_prompt_rect = quit_prompt_image.get_rect()
         quit_prompt_rect.top = 210
         quit_prompt_rect.left = 440
 
-        skip_prompt_image = pygame.image.load("skip_prompt.png")
+        skip_prompt_image = pygame.image.load(resource_path("skip_prompt.png"))
         skip_prompt_rect = skip_prompt_image.get_rect()
         skip_prompt_rect.top = 210
         skip_prompt_rect.left = 440
 
-        quit_yes_image = pygame.image.load("yes.png")
+        quit_yes_image = pygame.image.load(resource_path("yes.png"))
         quit_yes_rect = quit_yes_image.get_rect()
         quit_yes_rect.top = 400
         quit_yes_rect.left = 470
 
-        quit_no_image = pygame.image.load("no.png")
+        quit_no_image = pygame.image.load(resource_path("no.png"))
         quit_no_rect = quit_no_image.get_rect()
         quit_no_rect.top = 400
         quit_no_rect.left = 650
@@ -91,12 +99,12 @@ class App:
         rating_button_images = [[] for i in range(0,10)]
         rating_button_rects = [[] for i in range(0,10)]
         for i in range(0,10):
-            rating_button_images[i] = pygame.image.load(f"{i+1}_button.png")
+            rating_button_images[i] = pygame.image.load(resource_path(f"{i+1}_button.png"))
             rating_button_rects[i] = rating_button_images[i].get_rect()
             rating_button_rects[i].top = 400
             rating_button_rects[i].left = (50 + (i*100) + (i*20))
 
-        start_button_image = pygame.image.load("start.png")
+        start_button_image = pygame.image.load(resource_path("start.png"))
         start_button_rect = start_button_image.get_rect()
         start_button_rect.top = 500
         start_button_rect.left = 560
@@ -112,7 +120,7 @@ class App:
                     running = False
                     pygame.display.quit()
                     pygame.quit()
-                    #sys.exit()
+                    sys.exit()
 
                 elif event.type == pygame.MOUSEBUTTONUP:
                     mouse_pos = pygame.mouse.get_pos()
@@ -221,7 +229,7 @@ class App:
                                 else:
                                     chosen = i+1
                                     if chosen <= (difficulty+3):
-                                        difficulty += 3
+                                        difficulty += 2
                                         if difficulty > 10:
                                             difficulty -= difficulty % 10
                                     elif chosen >= difficulty+4:
@@ -244,12 +252,14 @@ class App:
                 line2 = puzzle_font.render(f"Your ID is {ID}, please make a note of this", False, (0, 0, 0))
                 line3 = puzzle_font.render("Your task is to solve 3 sudoku puzzles", False, (0, 0, 0))
                 line4 = puzzle_font.render("After each puzzle you will be asked to rate the difficulty", False, (0, 0, 0))
-                line5 = puzzle_font.render(f"Press the button below when you are ready to begin", False, (0, 0, 0))
-                window.blit(line1, (530,210))
-                window.blit(line2, (230,260))
-                window.blit(line3, (280,310))
-                window.blit(line4, (100,360))
-                window.blit(line5, (130,410))
+                line5 = puzzle_font.render(f"Every puzzle is solvable by a human", False, (0, 0, 0))
+                line6 = puzzle_font.render(f"Press the button below when you are ready to begin", False, (0, 0, 0))
+                window.blit(line1, (530,110))
+                window.blit(line2, (230,160))
+                window.blit(line3, (280,210))
+                window.blit(line4, (100,260))
+                window.blit(line5, (300,310))
+                window.blit(line6, (130,360))
                 window.blit(start_button_image, start_button_rect)
 
             if scene == "play":
@@ -281,7 +291,7 @@ class App:
                 window.blit(ID_text, (1060,625))
 
                 if empty_tiles == 0:
-                    time.sleep(0.5)
+                    time.sleep(0.2)
                     scene = "win"
                     self.end_time = time.time()
                     times[current_puzzle-1] = self.end_time - self.start_time
@@ -358,9 +368,9 @@ class App:
         for y in range(0,9):
             for x in range(0,9):
                 if difficulty == 0:
-                    images[y][x] = pygame.image.load("0.png")
+                    images[y][x] = pygame.image.load(resource_path("0.png"))
                 else:
-                    images[y][x] = pygame.image.load(f"{board[y][x]}.png")
+                    images[y][x] = pygame.image.load(resource_path(f"{board[y][x]}.png"))
                     image_rects[y][x] = images[y][x].get_rect()
                     image_rects[y][x].top = (100 + (y*TILE_WIDTH) + (y*5) + ((y//3)*5))
                     image_rects[y][x].left = (100 + (x*TILE_WIDTH) + (x*5) + ((x//3)*5))
