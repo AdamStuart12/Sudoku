@@ -34,6 +34,7 @@ class App:
         ID_font = pygame.font.SysFont('Calibri', 36, bold=True)
         results = [0,0,0]
         times = [0,0,0]
+        actuals = [0,0,0]
         difficulty = 1
 
         # Random Game Stuff
@@ -173,6 +174,7 @@ class App:
                         if quit_yes_rect.collidepoint(mouse_pos):
                             results[current_puzzle-1] = 0
                             times[current_puzzle-1] = 0
+                            actuals[current_puzzle-1] = difficulty
                             if current_puzzle == 3:
                                     mydb = mysql.connector.connect(
                                       host="132.145.18.222",
@@ -182,10 +184,13 @@ class App:
                                     )
                                     SQL = f"INSERT INTO Study VALUES ('{ID}', {results[0]}, {results[1]}, {results[2]});"
                                     SQL2 = f"INSERT INTO Times VALUES ('{ID}', {times[0]}, {times[1]}, {times[2]});"
+                                    SQL3 = f"INSERT INTO Actuals VALUES ('{ID}', {actuals[0]}, {actuals[1]}, {actuals[2]});"
                                     db = mydb.cursor()
                                     db.execute(SQL)
                                     mydb.commit()
                                     db.execute(SQL2)
+                                    mydb.commit()
+                                    db.execute(SQL3)
                                     mydb.commit()
                                     scene = "finished_success"
                             
@@ -200,7 +205,9 @@ class App:
                         for i in range(0,10):
                             if rating_button_rects[i].collidepoint(mouse_pos):
                                 results[current_puzzle-1] = i+1
+                                actuals[current_puzzle-1] = difficulty
                                 print(results)
+                                print(actuals)
                                 
                                 
                                 if current_puzzle == 3:
@@ -212,10 +219,13 @@ class App:
                                     )
                                     SQL = f"INSERT INTO Study VALUES ('{ID}', {results[0]}, {results[1]}, {results[2]});"
                                     SQL2 = f"INSERT INTO Times VALUES ('{ID}', {times[0]}, {times[1]}, {times[2]});"
+                                    SQL3 = f"INSERT INTO Actuals VALUES ('{ID}', {actuals[0]}, {actuals[1]}, {actuals[2]});"
                                     db = mydb.cursor()
                                     db.execute(SQL)
                                     mydb.commit()
                                     db.execute(SQL2)
+                                    mydb.commit()
+                                    db.execute(SQL3)
                                     mydb.commit()
                                     scene = "finished_success"
                                 else:
