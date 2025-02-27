@@ -43,6 +43,8 @@ class App:
         results = [0,0,0]
         times = [0,0,0]
         difficulty = 3
+        actuals = [0,0,0]
+
 
         # Random Game Stuff
         window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -142,13 +144,13 @@ class App:
                                 left = image_rects[sel_y][sel_x].left
                                 
                                 if board[sel_y][sel_x] == i+1: # if same number clicked
-                                    images[sel_y][sel_x] = pygame.image.load(f"0.png")
+                                    images[sel_y][sel_x] = pygame.image.load(resource_path(f"0.png"))
                                     board[sel_y][sel_x] = 0
                                     tile_colors[sel_y][sel_x] = self.LIGHT_BLUE
                                     empty_tiles += 1
                                     
                                 else: # if different number clicked
-                                    images[sel_y][sel_x] = pygame.image.load(f"{i+1}.png")
+                                    images[sel_y][sel_x] = pygame.image.load(resource_path(f"{i+1}.png"))
                                     valid_nums = board_class.findValidNumbers(board, sel_y, sel_x)
                                     board_val = board[sel_y][sel_x]
                                     board[sel_y][sel_x] = i+1
@@ -181,6 +183,7 @@ class App:
                         if quit_yes_rect.collidepoint(mouse_pos):
                             results[current_puzzle-1] = 0
                             times[current_puzzle-1] = 0
+                            actuals[current_puzzle-1] = difficulty
                             if current_puzzle == 3:
                                     mydb = mysql.connector.connect(
                                       host="132.145.18.222",
@@ -190,10 +193,13 @@ class App:
                                     )
                                     SQL = f"INSERT INTO Study VALUES ('{ID}', {results[0]}, {results[1]}, {results[2]});"
                                     SQL2 = f"INSERT INTO Times VALUES ('{ID}', {times[0]}, {times[1]}, {times[2]});"
+                                    SQL3 = f"INSERT INTO Actuals VALUES ('{ID}', {actuals[0]}, {actuals[1]}, {actuals[2]});"
                                     db = mydb.cursor()
                                     db.execute(SQL)
                                     mydb.commit()
                                     db.execute(SQL2)
+                                    mydb.commit()
+                                    db.execute(SQL3)
                                     mydb.commit()
                                     scene = "finished_success"
                             
@@ -208,7 +214,9 @@ class App:
                         for i in range(0,10):
                             if rating_button_rects[i].collidepoint(mouse_pos):
                                 results[current_puzzle-1] = i+1
+                                actuals[current_puzzle-1] = difficulty
                                 print(results)
+                                print(actuals)
                                 
                                 
                                 if current_puzzle == 3:
@@ -220,10 +228,13 @@ class App:
                                     )
                                     SQL = f"INSERT INTO Study VALUES ('{ID}', {results[0]}, {results[1]}, {results[2]});"
                                     SQL2 = f"INSERT INTO Times VALUES ('{ID}', {times[0]}, {times[1]}, {times[2]});"
+                                    SQL3 = f"INSERT INTO Actuals VALUES ('{ID}', {actuals[0]}, {actuals[1]}, {actuals[2]});"
                                     db = mydb.cursor()
                                     db.execute(SQL)
                                     mydb.commit()
                                     db.execute(SQL2)
+                                    mydb.commit()
+                                    db.execute(SQL3)
                                     mydb.commit()
                                     scene = "finished_success"
                                 else:
