@@ -62,7 +62,7 @@ class App:
         num_button_images = [[] for i in range(0,9)]
         num_button_rects = [[] for i in range(0,9)]
         for i in range(0,9):
-            num_button_images[i] = pygame.transform.scale(pygame.image.load(resource_path(f"{i+1}.png")).convert_alpha(), (100,100))
+            num_button_images[i] = pygame.transform.scale(pygame.image.load(resource_path(f"images/{i+1}.png")).convert_alpha(), (100,100))
             num_button_rects[i] = num_button_images[i].get_rect()
             num_button_rects[i].top = (190 + ((i//3)*(100+10)))
             num_button_rects[i].left = (700 + ((i%3)*(100+10)))
@@ -71,12 +71,12 @@ class App:
         rating_button_images = [[] for i in range(0,10)]
         rating_button_rects = [[] for i in range(0,10)]
         for i in range(0,10):
-            rating_button_images[i] = pygame.image.load(resource_path(f"{i+1}.png"))
+            rating_button_images[i] = pygame.image.load(resource_path(f"images/{i+1}.png"))
             rating_button_rects[i] = rating_button_images[i].get_rect()
             rating_button_rects[i].top = 380
-            rating_button_rects[i].left = (300 + (i*50) + (i*20))
+            rating_button_rects[i].left = (225 + (i*50) + (i*20))
 
-        new_puzzle_button_image = pygame.image.load(resource_path("new_puzzle_button.png"))
+        new_puzzle_button_image = pygame.image.load(resource_path("images/new_puzzle_button.png"))
         new_puzzle_button_rect = new_puzzle_button_image.get_rect()
         new_puzzle_button_rect.top = 540
         new_puzzle_button_rect.left = 735
@@ -115,14 +115,14 @@ class App:
                                 left = image_rects[sel_y][sel_x].left
                                 
                                 if board[sel_y][sel_x] == i+1: # if same number clicked
-                                    images[sel_y][sel_x] = pygame.image.load(resource_path(f"0.png"))
+                                    images[sel_y][sel_x] = pygame.image.load(resource_path(f"images/0.png"))
                                     board[sel_y][sel_x] = 0
                                     tile_colors[sel_y][sel_x] = self.LIGHT_BLUE
                                     empty_tiles += 1
                                     number_counts[i] -= 1
                                     
                                 else: # if different number clicked
-                                    images[sel_y][sel_x] = pygame.image.load(resource_path(f"{i+1}.png"))
+                                    images[sel_y][sel_x] = pygame.image.load(resource_path(f"images/{i+1}.png"))
                                     board_val = board[sel_y][sel_x]
 
                                     # set selected tile to empty and find valid nums for that tile
@@ -202,14 +202,14 @@ class App:
                 if start:
                     window.fill(LIGHT_GRAY)
                     start = False
-                pygame.draw.rect(window, BORDER_GRAY, pygame.Rect(250, 190, 780, 300))
+                pygame.draw.rect(window, BORDER_GRAY, pygame.Rect(175, 190, 780, 300))
                 for i in range(0,10):
                     pygame.draw.rect(window, self.WHITE, rating_button_rects[i])
                     window.blit(rating_button_images[i], rating_button_rects[i])
                 line1 = puzzle_font.render(f"Chose puzzle difficulty", False, (0, 0, 0))
                 line2 = puzzle_font.render("Where 1 is easy and 10 is difficult,", False, (0, 0, 0))
-                window.blit(line1, (420,240))
-                window.blit(line2, (310,290))
+                window.blit(line1, (345,240))
+                window.blit(line2, (235,290))
                 
             
             pygame.display.flip()
@@ -236,9 +236,9 @@ class App:
         for y in range(0,9):
             for x in range(0,9):
                 if difficulty == 0:
-                    images[y][x] = pygame.image.load(resource_path("0.png"))
+                    images[y][x] = pygame.image.load(resource_path("images/0.png"))
                 else:
-                    images[y][x] = pygame.image.load(resource_path(f"{board[y][x]}.png"))
+                    images[y][x] = pygame.image.load(resource_path(f"images/{board[y][x]}.png"))
                     image_rects[y][x] = images[y][x].get_rect()
                     image_rects[y][x].top = (100 + (y*TILE_WIDTH) + (y*5) + ((y//3)*5))
                     image_rects[y][x].left = (100 + (x*TILE_WIDTH) + (x*5) + ((x//3)*5))
@@ -248,7 +248,6 @@ class App:
             for tile in row:
                 if tile != 0:
                     number_counts[tile-1] += 1
-        print(number_counts)
                 
         return board, images, image_rects, tile_colors, sel_y, sel_x, empty_tiles, number_counts
 
